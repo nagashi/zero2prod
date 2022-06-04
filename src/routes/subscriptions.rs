@@ -1,4 +1,7 @@
 use actix_web::{web, HttpResponse};
+use chrono::Utc;
+use sqlx::PgPool;
+use uuid::Uuid;
 
 #[derive(serde::Deserialize)]
 pub struct FormData {
@@ -6,10 +9,37 @@ pub struct FormData {
     name: String,
 }
 
-pub async fn subscribe(_form: web::Form<FormData>) -> HttpResponse {
-    format!(
-        "Hello {}! You have subscribed with email {}",
-        _form.name, _form.email
+pub async fn subscribe(form: web::Form<FormData>, pool: web::Data<PgPool>) -> HttpResponse {
+    // Let's generate a random unique identifier
+    let request_id = Uuid::new_v4();
+    tracing::info!(
+        "request_id {} - Adding '{}' '{}' as a new subscriber.",
+        request_id,
+        form.email,
+        form.name
     );
-    HttpResponse::Ok().finish()
+    tracing::info!("Saving new subscriber details in the database");
+
+    match sqlx::query!(
+        r#"
+    INSERT INTO subscriptions (id, email, name, subscribed_at)
+    VALUES ($1, $2, $3, $4)
+    "#,
+        Uuid::new_v4(),
+        form.email,
+        form.name,
+        Utc::now()
+    )
+    .execute(pool.as_ref())
+    .await
+    {
+        Ok(_) => {
+            tracing::info!("request_id {request_id} - New subscriber details have been saved");
+            HttpResponse::Ok().finish()
+        }
+        Err(e) => {
+            log::error!("request_id {request_id} - Failed to execute query: {:?}", e);
+            HttpResponse::InternalServerError().finish()
+        }
+    }
 }
