@@ -4,9 +4,12 @@ use tracing::subscriber::set_global_default;
 use tracing_bunyan_formatter::{BunyanFormattingLayer, JsonStorageLayer};
 use tracing_subscriber::{layer::SubscriberExt, EnvFilter, Registry};
 use zero2prod::{configuration::get_configuration, startup::run};
+use tracing_log::LogTracer;
 
 #[tokio::main]
 async fn main() -> std::io::Result<()> {
+    // Redirect all `log`'s events to our subscriber
+    LogTracer::init().expect("Failed to set logger");
     // We removed the `env_logger` line we had before!
     // We are falling back to printing all spans at info-level or above
     // if the RUST_LOG environment variable has not been set.
