@@ -8,7 +8,7 @@ use once_cell::sync::Lazy;
 use secrecy::ExposeSecret;
 
 /*
-Ensure that the `tracing` stack is only initialised one using `once_cell 
+Ensure that the `tracing` stack is only initialised once using `once_cell 
 */
 static TRACING: Lazy<()> = Lazy::new(|| {
     let default_filter_level = "info".to_string();
