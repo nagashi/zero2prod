@@ -1,5 +1,4 @@
 FROM rust:1.64.0
-
 WORKDIR /app
 # Install the required system dependencies for our linking configuration
 RUN apt update && apt install lld clang -y 
